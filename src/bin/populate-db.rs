@@ -4,28 +4,14 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use dotenv::dotenv;
-use mongodb::{options::ClientOptions, Client};
 
-use api::config::MongoConfig;
+use api::clients::mongo_client::{mongo_connect, MongoConfig};
 use api::movie::Movie;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv().ok();
+    let client = mongo_connect().await?;
     let config = MongoConfig::build()?;
-
-    let client_options = ClientOptions::parse(format!(
-        "mongodb://{username}:{password}@{host}:{port}",
-        username = config.username,
-        password = config.password,
-        host = config.host,
-        port = config.port
-    ))
-    .await?;
-
-    let client = Client::with_options(client_options)?;
-
     client.database(&config.database).drop(None).await?;
 
     client
