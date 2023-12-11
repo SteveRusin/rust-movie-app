@@ -9,6 +9,7 @@ pub struct MongoConfig {
     pub password: String,
     pub database: String,
     pub movies_collection: String,
+    pub users_collection: String,
 }
 
 static mut MONGO_CONFIG: Option<MongoConfig> = None;
@@ -24,6 +25,7 @@ impl MongoConfig {
                     password: env::var("MONGO_PASSWORD")?,
                     database: env::var("MONGO_DATABASE")?,
                     movies_collection: "movies".to_owned(),
+                    users_collection: "users".to_owned(),
                 });
             }
 

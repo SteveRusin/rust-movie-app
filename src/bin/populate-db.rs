@@ -17,8 +17,18 @@ async fn main() -> Result<()> {
     db.drop(None).await?;
 
     populate_movies(&db).await?;
+    create_users_collection(&db).await?;
 
     println!("Database seeded successfully!");
+
+    Ok(())
+}
+
+async fn create_users_collection(db: &Database) -> Result<()> {
+    let config = MongoConfig::build()?;
+
+    db.create_collection(&config.users_collection, None)
+        .await?;
 
     Ok(())
 }
