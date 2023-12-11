@@ -7,19 +7,28 @@ use anyhow::{Context, Result};
 
 use api::clients::mongo_client::{mongo_connect, MongoConfig};
 use api::movie::Movie;
+use mongodb::Database;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = mongo_connect().await?;
     let config = MongoConfig::build()?;
-    client.database(&config.database).drop(None).await?;
+    let db = client.database(&config.database);
+    db.drop(None).await?;
 
-    client
-        .database(&config.database)
-        .create_collection(&config.movies_collection, None)
-        .await?;
+    populate_movies(&db).await?;
 
+    println!("Database seeded successfully!");
+
+    Ok(())
+}
+
+async fn populate_movies(db: &Database) -> Result<()> {
     let path_to_mocks = Path::new("src/bin/movies-mock");
+    let config = MongoConfig::build()?;
+
+    db.create_collection(&config.movies_collection, None)
+        .await?;
 
     for entry in fs::read_dir(path_to_mocks)? {
         let entry = entry.unwrap();
@@ -36,15 +45,11 @@ async fn main() -> Result<()> {
 
             println!("Inserting {:?} movies", file_name);
 
-            client
-                .database(&config.database)
-                .collection::<Movie>(&config.movies_collection)
+            db.collection::<Movie>(&config.movies_collection)
                 .insert_many(&movies_json, None)
                 .await?;
         }
     }
-
-    println!("Database seeded successfully!");
 
     Ok(())
 }
